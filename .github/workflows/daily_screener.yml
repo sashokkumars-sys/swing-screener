@@ -108,7 +108,7 @@ jobs:
         run: |
           echo "======================================"
           echo "  Screener Run Complete"
-          echo "  Date: $(date +'%d-%b-%Y %H:%M IST')"
+          echo "  Date: $(TZ='Asia/Kolkata' date +'%d-%b-%Y %H:%M IST')"
           echo "  Report: output/swing_screener_report.xlsx"
           echo "======================================"
           # Show top 10 from CSV
