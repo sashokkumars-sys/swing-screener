@@ -6,10 +6,6 @@ __pycache__/
 venv/
 env/
 
-# Output (keep structure, ignore generated files from local runs)
-output/*.xlsx
-output/*.csv
-
 # Logs
 logs/
 
@@ -21,5 +17,5 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Historical (tracked by git via GitHub Actions — don't ignore)
-# historical/all_runs.csv  ← intentionally NOT ignored
+# NOTE: output/ and historical/ are intentionally tracked (daily reports)
+EOF
