@@ -1,0 +1,21 @@
+# =============================================================================
+# requirements.txt — Swing Screener Dependencies
+# Install with: pip install -r requirements.txt
+# =============================================================================
+
+# Market data
+yfinance>=0.2.40
+
+# Data processing
+pandas>=2.1.0
+numpy>=1.26.0
+
+# Excel output
+openpyxl>=3.1.2
+
+# HTTP (used by yfinance internally — pin for stability)
+requests>=2.31.0
+urllib3>=2.0.0
+
+# Optional: faster data downloads (yfinance uses this if available)
+multitasking>=0.0.11
