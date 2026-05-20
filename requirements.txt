@@ -19,3 +19,11 @@ urllib3>=2.0.0
 
 # Optional: faster data downloads (yfinance uses this if available)
 multitasking>=0.0.11
+
+# Google Sheets integration
+gspread>=6.0.0
+google-auth>=2.27.0
+
+# Google Sheets integration
+gspread>=6.0.0
+google-auth>=2.27.0

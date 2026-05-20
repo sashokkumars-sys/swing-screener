@@ -123,3 +123,10 @@ jobs:
             head -11 output/swing_screener_report.csv | \
               cut -d',' -f1,2,3,5,6,7,8 | column -t -s','
           fi
+
+      - name: Update Google Sheets
+        if: always()
+        env:
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
+        run: python update_sheets.py
