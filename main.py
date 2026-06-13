@@ -74,68 +74,69 @@ def passes_basic_filters(symbol: str, tech: dict, fund: dict) -> tuple[bool, str
 
 def run_screener(symbols: list[str]) -> list[dict]:
     """
-    Full pipeline: fetch → indicators → filter → score → return results.
+    Full pipeline v2:
+    1. Fetch OHLCV + yfinance fundamentals
+    2. Compute technical indicators
+    3. Pre-filter (price, volume, 200 EMA)
+    4. Score with available data
+    5. ENRICH top 100 with Screener.in (promoter, ROCE, 3yr growth)
+    6. RE-SCORE with complete data
+    7. Final sort and return
     """
+    from screener_scraper import enrich_with_screener
+ 
     logger.info("=" * 60)
-    logger.info("  NSE SWING SCREENER — Starting Daily Run")
-    logger.info(f"  Stocks in universe: {len(symbols)}")
-    logger.info(f"  Run time: {datetime.now().strftime('%d-%b-%Y %H:%M IST')}")
+    logger.info("  NSE SWING SCREENER v2 — Phase 3B")
+    logger.info(f"  Universe: {len(symbols)} stocks")
+    logger.info(f"  Run: {datetime.now().strftime('%d-%b-%Y %H:%M IST')}")
     logger.info("=" * 60)
-
-    # Step 1: Fetch all data
+ 
+    # ── Step 1 & 2: Fetch + Indicators ─────────────────────────────
     raw_data = fetch_all_stocks(symbols, price_days=LOOKBACK_DAYS)
-    logger.info(f"\n✓ Data fetched for {len(raw_data)} stocks\n")
-
-    # Step 2: Compute indicators + score
-    results = []
-    passed = 0
+    logger.info(f"✓ Data fetched: {len(raw_data)} stocks")
+ 
+    # ── Step 3 & 4: Filter + Initial Score ─────────────────────────
+    results      = []
     filtered_out = 0
-
+ 
     for symbol, data in raw_data.items():
-        prices = data["prices"]
-        fundamentals = data["fundamentals"]
-
-        # Compute technical indicators
-        tech = compute_indicators(prices, TECH)
+        tech = compute_indicators(data["prices"], TECH)
         if tech is None:
-            logger.warning(f"{symbol}: Skipped — insufficient data for indicators")
             continue
-
-        # Basic pre-filter
-        ok, reason = passes_basic_filters(symbol, tech, fundamentals)
+ 
+        ok, reason = passes_basic_filters(symbol, tech, data["fundamentals"])
         if not ok:
-            logger.info(f"  ✗ {symbol}: Filtered out — {reason}")
+            logger.info(f"  ✗ {symbol}: {reason}")
             filtered_out += 1
             continue
-
-        # Score the stock
-        score = score_stock(symbol, tech, fundamentals)
-        passed += 1
-
+ 
+        score = score_stock(symbol, tech, data["fundamentals"])
         results.append({
             "symbol":          symbol,
             "tech_indicators": tech,
-            "fundamentals":    fundamentals,
+            "fundamentals":    data["fundamentals"],
             "score":           score,
         })
-
-        logger.info(
-            f"  ✓ {symbol:15s} | Score: {score['total_score']:5.1f} "
-            f"| Grade: {score['grade']:2s} "
-            f"| {fundamentals.get('sector','')}"
-        )
-
-    # Sort by total score descending
+ 
+    logger.info(f"✓ After filters: {len(results)} stocks | Filtered: {filtered_out}")
+ 
+    # ── Step 5: Enrich top 100 with Screener.in ────────────────────
+    logger.info("Enriching with Screener.in data...")
+    results = enrich_with_screener(results, max_stocks=100)
+ 
+    # ── Step 6: Re-score with complete data ────────────────────────
+    logger.info("Re-scoring with complete fundamental data...")
+    for r in results:
+        r["score"] = score_stock(r["symbol"], r["tech_indicators"], r["fundamentals"])
+ 
+    # ── Step 7: Final sort ─────────────────────────────────────────
     results.sort(key=lambda x: x["score"]["total_score"], reverse=True)
-
-    logger.info(f"\n{'='*60}")
-    logger.info(f"  SCREENING COMPLETE")
-    logger.info(f"  Passed filters:    {passed}")
-    logger.info(f"  Filtered out:      {filtered_out}")
-    logger.info(f"  Total processed:   {passed + filtered_out}")
-    logger.info(f"{'='*60}\n")
-
+ 
+    logger.info(f"✓ Final ranked list: {len(results)} stocks")
+    logger.info(f"  Top pick: {results[0]['symbol']} "
+                f"Score: {results[0]['score']['total_score']}")
     return results
+
 
 
 # ---------------------------------------------------------------------------

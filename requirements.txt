@@ -27,3 +27,4 @@ google-auth>=2.27.0
 # Google Sheets integration
 gspread>=6.0.0
 google-auth>=2.27.0
+beautifulsoup4>=4.12.0
